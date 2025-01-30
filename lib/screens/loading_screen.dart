@@ -1,39 +1,59 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:go_router/go_router.dart';
+import '../services/api.dart';
+import '../widgets/logo.dart';
 
-class LoadingScreen extends StatelessWidget {
+class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
+
+  @override
+  State<LoadingScreen> createState() => _LoadingScreenState();
+}
+
+class _LoadingScreenState extends State<LoadingScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    final api = ApiService();
+    
+    try {
+      // Başlangıç verilerini yükle
+      await Future.wait([
+        api.getCategories(),
+        api.getPopularNews(),
+      ]);
+      
+      // Ana sayfaya yönlendir
+      if (mounted) {
+        context.go('/');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Veriler yüklenirken bir hata oluştu')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Logo ve yükleme göstergesi bölümü
-          Container(
-            width: double.infinity,
-            child: Column(
-              children: [
-                // Logo bölümü
-                Container(
-                  width: 150,
-                  height: 150,
-                  child: Image.asset(
-                    'assets/images/logo.png',
-                    fit: BoxFit.contain,
-                  ),
-                ),
-
-
-
-                // Yükleniyor yazısı
-                CircularProgressIndicator(),
-              ],
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Logo(size: 150),
+            const SizedBox(height: 24),
+            CircularProgressIndicator(
+              color: Theme.of(context).primaryColor,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
